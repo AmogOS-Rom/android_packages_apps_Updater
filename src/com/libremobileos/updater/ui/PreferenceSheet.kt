@@ -53,21 +53,27 @@ class PreferenceSheet : BottomSheetDialogFragment() {
             preferencesUpdateRecovery = findViewById(R.id.preferences_update_recovery)
             preferencesAutoUpdatesCheckInterval = findViewById(R.id.preferences_auto_updates_check_interval)
         }
-        if (!Utils.isABDevice())
+
+        if (!Utils.isABDevice() || Utils.isABPerfModeForceEnabled(requireContext())) {
             preferencesAbPerfMode.visibility = View.GONE
+        }
+
+        if (Utils.isDeleteUpdatesForceEnabled(requireContext())) {
+            preferencesAutoDeleteUpdates.visibility = View.GONE
+        }
 
         prefs = PreferenceManager.getDefaultSharedPreferences(requireContext())
         preferencesAutoUpdatesCheckInterval.setSelection(Utils.getUpdateCheckSetting(requireContext()))
         preferencesAutoDeleteUpdates.isChecked =
-            prefs!!.getBoolean(Constants.PREF_AUTO_DELETE_UPDATES, false)
+            prefs!!.getBoolean(Constants.PREF_AUTO_DELETE_UPDATES, true)
         preferencesMobileDataWarning.isChecked =
             prefs!!.getBoolean(Constants.PREF_MOBILE_DATA_WARNING, true)
         preferencesAbPerfMode.isChecked =
-            prefs!!.getBoolean(Constants.PREF_AB_PERF_MODE, false)
+            prefs!!.getBoolean(Constants.PREF_AB_PERF_MODE, true)
 
-        if (resources.getBoolean(R.bool.config_hideRecoveryUpdate)) {
-            // Hide the update feature if explicitly requested.
-            // Might be the case of A-only devices using prebuilt vendor images.
+        if (resources.getBoolean(R.bool.config_hideRecoveryUpdate) || Utils.isABDevice()) {
+            // Hide the update feature if it's A/B device or explicitly requested.
+            // Explicit request might be the case of A-only devices using prebuilt vendor images.
             preferencesUpdateRecovery.visibility = View.GONE
         } else if (Utils.isRecoveryUpdateExecPresent()) {
             preferencesUpdateRecovery.isChecked =
